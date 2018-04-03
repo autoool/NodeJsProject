@@ -26,6 +26,7 @@ function getWeatherData() {
 }
 
 var express = require('express');
+var bodyParese = require('body-parser')
 var fortune = require('./lib/fortune.js');
 var app = express();
 
@@ -56,6 +57,14 @@ app.set('view engine', 'handlebars');
 
 app.set('port', process.env.PORT || 3000);
 
+// json类型 body
+app.use(bodyParese.json());
+
+//query string 类型 bodu
+app.use(bodyParese.urlencoded({
+	extended:false
+}));
+
 app.use(function (req, res, next) {
     var cluster = require('cluster');
     if (cluster.isWorker) {
@@ -77,6 +86,22 @@ app.use(function (req, res, next) {
     res.locals.showTests = app.get('env') !== 'production' && req.query.test === '1';
     next();
 });
+
+app.get('/newsletter', function (req, res) {
+    res.render('newsletter', {
+        csrf: 'CSRF token goes here'
+    });
+})
+
+app.post('/process', function (req, res) {
+    if (req.xhr || req.accepts('json,html') === 'json') {
+        res.send({
+            success: true
+        })
+    } else {
+        res.redirect(303, '/thank you');
+    }
+})
 
 app.get('/epic-fail', function (req, res) {
     process.nextTick(function () {
@@ -107,11 +132,11 @@ app.use(function (err, req, res, next) {
     res.status(500);
     res.send('500');
 });
-if (require.main == module) {
-    startServer();
-} else {
-    module.exports = startServer;
-}
-// app.listen(app.get('port'), function () {
-//     console.log('start in ' + app.get('env') + ' mode on http://localhost: ' + app.get('port'));
-// });
+// if (require.main == module) {
+//     startServer();
+// } else {
+//     module.exports = startServer;
+// }
+app.listen(app.get('port'), function () {
+    console.log('start in ' + app.get('env') + ' mode on http://localhost: ' + app.get('port'));
+});

@@ -1,5 +1,5 @@
 var express = require('express');
-var bodyParese = require('body-parser')
+var bodyParese = require('body-parser');
 
 
 var app = express();

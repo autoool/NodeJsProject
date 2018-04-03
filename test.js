@@ -36,7 +36,10 @@
 
 Promise.resolve('foo').then(function (response) {
     console.log(response);
+    throw Error('test error')
     return Promise.resolve('bar');
 }).then(function (result) {
     console.log(result);
+}).catch(err => {
+    console.log(err);
 });
