@@ -1,33 +1,11 @@
-function getWeatherData() {
-    return {
-        locations: [{
-                name: 'Portland',
-                forecastUrl: 'http://www.wunderground.com/US/OR/Portland.html',
-                iconUrl: 'http://icons-ak.wxug.com/i/c/k/cloudy.gif',
-                weather: 'Overcast',
-                temp: '54.1 F (12.3 C)',
-            },
-            {
-                name: 'Bend',
-                forecastUrl: 'http://www.wunderground.com/US/OR/Bend.html',
-                iconUrl: 'http://icons-ak.wxug.com/i/c/k/partlycloudy.gif',
-                weather: 'Partly Cloudy',
-                temp: '55.0 F (12.8 C)',
-            },
-            {
-                name: 'Manzanita',
-                forecastUrl: 'http://www.wunderground.com/US/OR/Manzanita.html',
-                iconUrl: 'http://icons-ak.wxug.com/i/c/k/rain.gif',
-                weather: 'Light Rain',
-                temp: '55.0 F (12.8 C)',
-            },
-        ],
-    };
-}
+
 
 var express = require('express');
-var bodyParese = require('body-parser')
+var bodyParese = require('body-parser');
 var fortune = require('./lib/fortune.js');
+var weather = require('./lib/weather.js');
+var formidable = require('formidable');
+var credentials = require('/credentials.js');
 var app = express();
 
 function startServer() {
@@ -49,11 +27,12 @@ switch (app.get('env')) {
 var handlebars = require('express-handlebars')
     .create({
         defaultLayout: 'main',
+        extname:'.hbs',
         layoutDir: app.get('views') + '/layouts',
         partialsDir: [app.get('views') + '/partials']
     });
-app.engine('handlebars', handlebars.engine);
-app.set('view engine', 'handlebars');
+app.engine('.hbs', handlebars.engine);
+app.set('view engine', '.hbs');
 
 app.set('port', process.env.PORT || 3000);
 
@@ -78,13 +57,30 @@ app.use(express.static(__dirname + '/public'));
 
 app.use(function (req, res, next) {
     if (!res.locals.partials) res.locals.partials = {};
-    res.locals.partials.weather = getWeatherData();
+    res.locals.partials.weather = weather.getWeatherData();
     next();
 });
 
 app.use(function (req, res, next) {
     res.locals.showTests = app.get('env') !== 'production' && req.query.test === '1';
     next();
+});
+
+app.get('/contest/vacation-photo',function(req,res){
+    var now = new Date();
+    res.render('contest/vacation-photo',{
+        year:now.getFullYear(),month:now.getMonth()
+    });
+});
+
+app.post('/contest/vacation-photo/:year/:month',function(req,res){
+    var form = new formidable.IncomingForm();
+    form.parse(req,function(err,fields,files){
+        if(err) return res.redirect(303,'/error');
+        console.log(fields);
+        console.log(files);
+        res.redirect(303,'/thanks');
+    })
 });
 
 app.get('/newsletter', function (req, res) {
