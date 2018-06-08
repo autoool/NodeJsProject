@@ -1,21 +1,12 @@
-var express = require('express');
-var bodyParese = require('body-parser');
+import express from 'express';
+var Person= require('./usertest');
 
 
-var app = express();
+let app = express();
+app.get('/', (res, req) => {
 
-// json类型 body
-app.use(bodyParese.json());
-
-//query string 类型 bodu
-app.use(bodyParese.urlencoded({
-	extended:false
-}));
-
-//静态文件目录
-app.use(express.static(__dirname+'/public'));
-
-//路由与业务逻辑
-app.use('/user',require('./routes/users.js'));
-
-app.listen(80);
+})
+app.listen(3000, (res) => {
+	Person.say();
+Person.sayHello();
+});

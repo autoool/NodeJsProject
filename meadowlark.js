@@ -1,18 +1,98 @@
+require('babel-register');
+var express = require('express'),
+    path = require('path'),
+    bodyParese = require('body-parser'),
+    fortune = require('./lib/fortune.js'),
+    weather = require('./lib/weather.js'),
+    formidable = require('formidable'),
+    mongoose = require('mongoose'),
+    fs = require('fs'),
+    credentials = require('./credentials.js'),
+    VacationInSeasonListener = require('./models/vacationInSeasonListener.js'),
+    Vacation = require('./models/vacation.js'),
+    routes = require('./routes/index'),
+    users = require('./routes/users'),
+    upload = require('./routes/upload');
 
-
-var express = require('express');
-var bodyParese = require('body-parser');
-var fortune = require('./lib/fortune.js');
-var weather = require('./lib/weather.js');
-var formidable = require('formidable');
-var credentials = require('/credentials.js');
 var app = express();
+
+var dataDir = __dirname + '/data';
+var vacationPhotoDir = dataDir + '/vacation-photo';
+fs.existsSync(dataDir) || fs.mkdirSync(dataDir);
+fs.existsSync(vacationPhotoDir) || fs.mkdirSync(vacationPhotoDir);
+
+
+Vacation.find(function (err, vacations) {
+    if (vacations.length) return;
+    new Vacation({
+        name: 'Hood River Day Trip',
+        slug: 'hood-river-day-trip',
+        category: 'Day Trip',
+        sku: 'HR199',
+        description: 'Spend a day sailing on the Columbia and ' +
+            'enjoying craft beers in Hood River!',
+        priceInCents: 9995,
+        tags: ['day trip', 'hood river', 'sailing', 'windsurfing', 'breweries'],
+        inSeason: true,
+        maximumGuests: 16,
+        available: true,
+        packagesSold: 0,
+    }).save();
+    new Vacation({
+        name: 'Oregon Coast Getaway',
+        slug: 'oregon-coast-getaway',
+        category: 'Weekend Getaway',
+        sku: 'OC39',
+        description: 'Enjoy the ocean air and quaint coastal towns!',
+        priceInCents: 269995,
+        tags: ['weekend getaway', 'oregon coast', 'beachcombing'],
+        inSeason: false,
+        maximumGuests: 8,
+        available: true,
+        packagesSold: 0,
+    }).save();
+    new Vacation({
+        name: 'Rock Climbing in Bend',
+        slug: 'rock-climbing-in-bend',
+        category: 'Adventure',
+        sku: 'B99',
+        description: 'Experience the thrill of climbing in the high desert.',
+        priceInCents: 289995,
+        tags: ['weekend getaway', 'bend', 'high desert', 'rock climbing'],
+        inSeason: true,
+        requiresWaiver: true,
+        maximumGuests: 4,
+        available: false,
+        packagesSold: 0,
+        notes: 'The tour guide is currently recovering from a skiing accident.',
+    }).save();
+});
+
+function saveContestEntry(contestName, email, year, month, photoPath) {
+    // TODO
+}
 
 function startServer() {
     app.listen(app.get('port'), function () {
         console.log('start in ' + app.get('env') + ' mode on http://localhost: ' + app.get('port'));
     });
 }
+
+var opts = {
+    keepAlive: true
+};
+
+switch (app.get('env')) {
+    case 'development':
+        mongoose.connect(credentials.mongo.development.connectionString, opts);
+        break;
+    case 'production':
+        mongoose.connect(credentials.mongo.production.connectionString, opts);
+        break;
+    default:
+        throw new Error('Unknown execution environment: ' + app.get('env'));
+}
+
 
 switch (app.get('env')) {
     case 'development':
@@ -27,7 +107,7 @@ switch (app.get('env')) {
 var handlebars = require('express-handlebars')
     .create({
         defaultLayout: 'main',
-        extname:'.hbs',
+        extname: '.hbs',
         layoutDir: app.get('views') + '/layouts',
         partialsDir: [app.get('views') + '/partials']
     });
@@ -36,13 +116,28 @@ app.set('view engine', '.hbs');
 
 app.set('port', process.env.PORT || 3000);
 
+var session = require('express-session');
+var MongoSessionStore = require('connect-mongo')(session);
+app.use(require('cookie-parser')(credentials.cookiesSecret));
+app.use(session({
+    resave: false,
+    saveUninitialized: false,
+    secret: credentials.cookiesSecret,
+    store: new MongoSessionStore({
+        url: credentials.mongo[app.get('env')].connectionString
+    }),
+}));
+
+
 // json类型 body
 app.use(bodyParese.json());
 
 //query string 类型 bodu
 app.use(bodyParese.urlencoded({
-	extended:false
+    extended: false
 }));
+
+
 
 app.use(function (req, res, next) {
     var cluster = require('cluster');
@@ -53,7 +148,7 @@ app.use(function (req, res, next) {
 });
 
 //静态文件目录
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(function (req, res, next) {
     if (!res.locals.partials) res.locals.partials = {};
@@ -66,21 +161,130 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.get('/contest/vacation-photo',function(req,res){
-    var now = new Date();
-    res.render('contest/vacation-photo',{
-        year:now.getFullYear(),month:now.getMonth()
+app.use('/users', users);
+app.use('/files', upload);
+
+
+
+app.get('/set-currency/:currency', function (req, res) {
+    req.session.currency = req.params.currency;
+    return res.redirect(303, '/vacations');
+});
+
+function convertFromUSD(value, currency) {
+    switch (currency) {
+        case 'USD':
+            return value * 1;
+        case 'GBP':
+            return value * 0.6;
+        case 'BTC':
+            return value * 0.0023707918444761;
+        default:
+            return NaN;
+    }
+}
+
+app.get('/vacations', function (req, res) {
+    Vacation.find({
+        available: true
+    }, function (err, vacations) {
+        var currency = req.session.currency || 'USD';
+        var context = {
+            vacations: vacations.map(function (vacation) {
+                return {
+                    sku: vacation.sku,
+                    name: vacation.name,
+                    description: vacation.description,
+                    price: convertFromUSD(vacation.priceInCents / 100, currency),
+                    qty: vacation.qty,
+                    inSeason: vacation.inSeason,
+                };
+            })
+        };
+        switch (currency) {
+            case 'USD':
+                context.currencyUSD = 'selected';
+                break;
+            case 'GBP':
+                context.currencyGBP = 'selected';
+                break;
+            case 'BTC':
+                context.currencyBTC = 'selected';
+                break;
+        }
+        res.render('vacations', context);
     });
 });
 
-app.post('/contest/vacation-photo/:year/:month',function(req,res){
+app.get('/notify-me-when-in-season', function (req, res) {
+    res.render('notify-me-when-in-season', {
+        sku: req.query.sku
+    });
+});
+
+app.post('/notify-me-when-in-season', function (req, res) {
+    VacationInSeasonListener.update({
+            email: req.body.email
+        }, {
+            $push: {
+                skus: req.body.sku
+            }
+        }, {
+            upsert: true
+        },
+        function (err) {
+            if (err) {
+                console.error(err.stack);
+                // req.session.flash = {
+                //     type: 'danger',
+                //     intro: 'Ooops!',
+                //     message: 'There was an error processing your request.',
+                // };
+                return res.redirect(303, '/vacations');
+            }
+            // req.session.flash = {
+            //     type: 'success',
+            //     intro: 'Thank you!',
+            //     message: 'You will be notified when this vacation is in season.',
+            // };
+            return res.redirect(303, '/vacations');
+        }
+    );
+});
+
+app.get('/contest/vacation-photo', function (req, res) {
+    var now = new Date();
+    res.render('contest/vacation-photo', {
+        year: now.getFullYear(),
+        month: now.getMonth()
+    });
+});
+
+app.post('/contest/vacation-photo/:year/:month', function (req, res) {
     var form = new formidable.IncomingForm();
-    form.parse(req,function(err,fields,files){
-        if(err) return res.redirect(303,'/error');
-        console.log(fields);
-        console.log(files);
-        res.redirect(303,'/thanks');
-    })
+    form.parse(req, function (err, fields, files) {
+        if (err) return res.redirect(303, '/error');
+        if (err) {
+            res.session.flash = {
+                type: 'danger',
+                intro: 'Oops!',
+                message: 'try again',
+            };
+            return res.redirect(303, '/contest/vacation-photo');
+        }
+        var photo = files.photo;
+        var dir = vacationPhotoDir + '/' + Date.now();
+        var path = dir + '/' + photo.name;
+        fs.mkdirSync(dir);
+        fs.renameSync(photo.path, dir + '/' + photo.name);
+        saveContestEntry("vacation-photo", fields.email, req.params.year, req.params.month, path);
+        req.session.flash = {
+            type: 'success',
+            intro: 'Good Luck',
+            message: 'entered',
+        };
+        return res.redirect(303, '/contest/vacation-photo/entries');
+    });
 });
 
 app.get('/newsletter', function (req, res) {

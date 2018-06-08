@@ -2,9 +2,13 @@
 	"name": "node_demo",
 	"main": "meadowlark.js",
 	"dependencies": {
+		"axios": "^0.18.0",
 		"body-parser": "*",
 		"bootstrap": "^4.0.0",
+		"connect": "^3.6.6",
+		"connect-mongo": "^2.0.1",
 		"cookie-parser": "^1.4.3",
+		"crypto": "^1.0.1",
 		"express": "^4.16.3",
 		"express-handlebars": "^3.0.0",
 		"express-logger": "0.0.3",
@@ -12,14 +16,30 @@
 		"formidable": "^1.2.1",
 		"jquery-file-upload-middleware": "^0.1.8",
 		"loadtest": "^3.0.0",
-		"morgan": "^1.9.0"
+		"lodash": "^4.17.10",
+		"mongoose": "^5.0.13",
+		"morgan": "^1.9.0",
+		"mysql": "^2.15.0",
+		"request": "^2.87.0",
+		"seneca": "^3.4.3",
+		"session-mongoose": "^0.5.2"
 	},
 	"devDependencies": {
+		"babel-cli": "^6.26.0",
+		"babel-core": "^6.26.3",
+		"babel-preset-es2015": "^6.24.1",
+		"babel-register": "^6.26.0",
 		"chai": "^4.1.2",
+		"eslint": "^4.19.1",
+		"eslint-plugin-node": "^6.0.1",
 		"grunt": "^1.0.2",
 		"grunt-cafe-mocha": "^0.1.13",
 		"grunt-contrib-jshint": "^1.1.0",
 		"grunt-exec": "^3.0.0",
-		"mocha": "^5.0.5"
+		"mocha": "^5.0.5",
+		"restler": "^3.4.0"
+	},
+	"scripts": {
+		"start": "node index.js"
 	}
 }

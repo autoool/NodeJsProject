@@ -1,25 +1,62 @@
 var express = require('express');
 var router = express.Router();
+var utils = require('../lib/util');
+var userModel = require('../models/user');
+var httpApi = require('../lib/httpapi');
+var credentials = require('../credentials');
+const User= require('../controller/UserController');
 
-router.all('/list',function(req,res){
-	console.log(req.method);
-	console.log(req.baseUrl);
-	console.log(req.path);
-	console.log(req.headers['user-agent']);
-	console.log(req.get['user-agent']);
-	console.log(req.query);
-	console.log(req.query.id);
-	console.log(req.body);
-	console.log(req.body.id);
+router.post('/getOpenId',User.getOpenIdAction);
 
+router.post('/updateUser',User.updateUserAction);
 
-	res.send('list hello');
-});
+router.post('sendMessage',function(req,res){
+	var openId = req.body.openId;
+	var formId = req.body.formId;
+	try{
+		if(utils.isEmpty(req.body.openId)){
+			throw Error("openId不能为空");
+		}
+		if(utils.isEmpty(req.body.formId)){
+			throw Error("formId不能为空");
+		}	
+		httpApi.sendMessageMP(openId,formId)
+		.then(function(response){
+	
+		}).catch(function(err){
+	
+		})
+	}catch(err){
 
-router.get('/:id',function(req,res){
-	console.log(req.params.id);
-	res.send('ok');
+	}
+	
 })
 
+router.post('/getOpenId', function (req, res) {
+	try {
+		var code = req.body.code;
+		httpApi.getOpenIdFromWechat(code,
+			credentials.miniProgram.appId,
+			credentials.miniProgram.appSecret,
+			function (err) {
+				throw err;
+			},
+			function (response) {
+				var result = {
+					sessionKey: response.session_key,
+					openId: response.openid
+				};
+				res.json({
+					code: 1,
+					data: result
+				});
+			});
+	} catch (err) {
+		res.json({
+			code: 0,
+			message: err.message,
+		});
+	}
+});
+
 module.exports = router;
-	
