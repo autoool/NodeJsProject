@@ -31,7 +31,6 @@ class User {
                         openId: openId,
                         sessionKey: sessionKey
                     }
-
                     let userQuery = userModel.find({
                         'openId': openId
                     });
@@ -127,6 +126,36 @@ class User {
             let resSendData = responseFunc.renderApiData(res, 0, err.message);
             res.json(resSendData);
         }
+    }
+
+
+    getUserInfo(req, res, next) {
+        console.log(req.body);
+        let userId = req.body.userId;
+        if (_.isEmpty(userId)) {
+            throw Error('userId不能为空');
+        }
+        let userQuery = userModel.find({
+            '_id': userId
+        });
+        userQuery.exec(function (err, users) {
+            if (err) {
+                let resSendData = responseFunc.renderApiErr(res, 0, err.message);
+                res.json(resSendData);
+                return;
+            }
+            if (users.length == 0) {
+                let resSendData = responseFunc.renderApiErr(res, 0, "用户不存在");
+                res.json(resSendData);
+            } else if (users.length == 1) {
+                let userData = users[0];
+                let resSendData = responseFunc.renderApiData(res, 1, "", userData);
+                res.json(resSendData);
+            } else {
+                let resSendData = responseFunc.renderApiData(res, 0, "用户信息异常");
+                res.json(resSendData);
+            }
+        });
     }
 }
 

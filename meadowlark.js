@@ -12,6 +12,7 @@ var express = require('express'),
     Vacation = require('./models/vacation.js'),
     routes = require('./routes/index'),
     users = require('./routes/users'),
+    videos = require('./routes/video'),
     upload = require('./routes/upload');
 
 var app = express();
@@ -162,6 +163,7 @@ app.use(function (req, res, next) {
 });
 
 app.use('/users', users);
+app.use('/video',videos);
 app.use('/files', upload);
 
 

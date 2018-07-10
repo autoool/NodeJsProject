@@ -10,6 +10,8 @@ router.post('/getOpenId',User.getOpenIdAction);
 
 router.post('/updateUser',User.updateUserAction);
 
+router.post('/getUserInfo',User.getUserInfo);
+
 router.post('sendMessage',function(req,res){
 	var openId = req.body.openId;
 	var formId = req.body.formId;
