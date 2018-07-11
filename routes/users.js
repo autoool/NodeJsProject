@@ -4,7 +4,7 @@ var utils = require('../lib/util');
 var userModel = require('../models/user');
 var httpApi = require('../lib/httpapi');
 var credentials = require('../credentials');
-const User= require('../controller/UserController');
+const User= require('../controller/remote/UserController');
 
 router.post('/getOpenId',User.getOpenIdAction);
 

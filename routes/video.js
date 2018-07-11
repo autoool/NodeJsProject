@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-const Video= require('../controller/VideoController');
+const Video= require('../controller/remote/VideoController');
 
 router.post('/insert',Video.insertVideo);
 

@@ -1,10 +1,10 @@
-const utils = require('../lib/util');
-const userModel = require('../models/user');
-const httpApi = require('../lib/httpapi');
-const credentials = require('../credentials');
-const responseFunc = require('../lib/responseFunc');
+const utils = require('../../lib/util');
+const userModel = require('../../models/user');
+const httpApi = require('../../lib/httpapi');
+const credentials = require('../../credentials');
+const responseFunc = require('../../lib/responseFunc');
 const formidable = require('formidable');
-const WXBizDataCrypt = require('../lib/WXBizDataCrypt')
+const WXBizDataCrypt = require('../../lib/WXBizDataCrypt')
 const _ = require('lodash')
 
 class User {

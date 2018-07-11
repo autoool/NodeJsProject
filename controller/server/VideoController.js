@@ -1,5 +1,5 @@
-const videoModel = require('../models/videoEntity');
-const responseFunc = require('../lib/responseFunc');
+const videoModel = require('../../models/videoEntity');
+const responseFunc = require('../../lib/responseFunc');
 const formidable = require('formidable');
 const _ = require('lodash')
 
