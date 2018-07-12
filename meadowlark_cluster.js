@@ -19,11 +19,7 @@ if (cluster.isMaster) {
         console.log('CLUSTER: Worker %d died with exit code %d (%s)',
             worker.id, code, signal);
         startWorker();
-    });
-
-
-
-    
+    });    
 } else {
     // 在这个工作线程上启动我们的应用服务器，参见meadowlark.js
     require('./meadowlark.js')();

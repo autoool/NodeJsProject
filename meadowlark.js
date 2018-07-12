@@ -72,13 +72,6 @@ Vacation.find(function (err, vacations) {
 function saveContestEntry(contestName, email, year, month, photoPath) {
     // TODO
 }
-
-function startServer() {
-    app.listen(app.get('port'), function () {
-        console.log('start in ' + app.get('env') + ' mode on http://localhost: ' + app.get('port'));
-    });
-}
-
 var opts = {
     keepAlive: true
 };

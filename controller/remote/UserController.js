@@ -24,9 +24,9 @@ class User {
                     //获取unionId    
                     if (undefined != response.data.errcode) {
                         throw Error(response.data.errmsg)
-                    }
+                    }        
                     let openId = response.data.openid;
-                    let sessionKey = response.data.session_key;
+                    let sessionKey = response.data.session_key;              
                     var userObj = {
                         openId: openId,
                         sessionKey: sessionKey
