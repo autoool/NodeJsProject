@@ -46,7 +46,8 @@ router.post('/upload', function (req, res, next) {
             res.json(resSendData);
             return;
         }
-        let resSendData = responseFunc.renderApiData(res, 1, '', newPath);
+        var imageUrl = "http://localhost:3000"+AVATAR_UPLOAD_FOLDER+avatarName;
+        let resSendData = responseFunc.renderApiData(res, 1, '', imageUrl);
         res.json(resSendData);
     });
 })

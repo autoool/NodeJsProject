@@ -13,6 +13,8 @@ class Video {
             let tags = req.body.tags;
             let description = req.body.description;
             let videoPath = req.body.videoPath;
+            let thumbnail = req.body.thumbnail;
+            let vid = req.body.vid;
             if (_.isEmpty(title)) {
                 throw Error("标题不能为空");
             }
@@ -25,6 +27,12 @@ class Video {
             if (_.isEmpty(videoPath)) {
                 throw Error("视频路径不能为空");
             }
+            if (_.isEmpty(thumbnail)) {
+                throw Error("缩略图不能为空");
+            }
+            if (_.isEmpty(vid)) {
+                throw Error("vid不能为空");
+            }
             let videoInsert = await videoModel.find({
                 'title': title
             }).exec();
@@ -35,6 +43,8 @@ class Video {
                     title: title,
                     description: description,
                     tags: tags,
+                    thumbnail: thumbnail,
+                    vid: vid,
                     videoPath: videoPath
                 }
                 let newVideo = new videoModel(videoObj);
@@ -57,6 +67,8 @@ class Video {
             let tags = req.body.tags;
             let description = req.body.description;
             let videoPath = req.body.videoPath;
+            let thumbnial = req.body.thumbnial;
+            let vid = req.body.vid;
             let updateObj = await videoModel.find({
                 "_id": id
             }).exec();
@@ -75,6 +87,13 @@ class Video {
             if (!_.isEmpty(videoPath)) {
                 updateObj.videoPath = videoPath;
             }
+            if (!_.isEmpty(thumbnial)) {
+                updateObj.thumbnial = thumbnial;
+            }
+            if (!_.isEmpty(vid)) {
+                updateObj.vid = vid;
+            }
+
             await videoModel.findOneAndUpdate({
                 _id: updateObj._id
             }, {
@@ -89,7 +108,6 @@ class Video {
 
 
     }
-
 
     async getVideosPage(req, res, next) {
         try {
@@ -107,10 +125,16 @@ class Video {
                     path: 'items'
                 }]).exec();
             let resSendData;
+            let totalCount = await videoModel.count();
+            let pageInfo = {
+                totalCount,
+                current: Number(pageIndex) || 1,
+                pageSize: Number(pageSize) || 10
+            }
             if (videos && videos.length > 0) {
-                resSendData = responseFunc.renderApiData(res, 1, "", videos);
+                resSendData = responseFunc.renderApiPageData(res, 1, "", videos, pageInfo);
             } else {
-                resSendData = responseFunc.renderApiData(res, 1, "", []);
+                resSendData = responseFunc.renderApiPageData(res, 1, "", [], pageInfo);
             }
             res.json(resSendData);
         } catch (err) {

@@ -3,8 +3,10 @@ var videoSchema = new mongoose.Schema({
     title:String,
     description:String,
     tags:[String],
+    thumbnail:String,    
     status:{type:Number,default:1},//1 有效 0 无效
     videoPath:String,
+    vid:String,
     createAt:{type:Date,default:Date.now()},
     updateAt:{type:Date,default:Date.now()},
 });
